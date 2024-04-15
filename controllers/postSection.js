@@ -1,3 +1,4 @@
+const Post = require("../models/post");
 const Reply = require("../models/reply");
 const User = require("../models/user");
 const { Op } = require("sequelize");
@@ -19,4 +20,18 @@ const postSection = async (req, res) => {
   }
 };
 
-module.exports = { postSection };
+const post = async (req, res) => {
+  try {
+    const isAdmin = req.user.isAdmin;
+    if (isAdmin) {
+      const posts = await Post.findAll();
+      res.status(200).json(posts);
+    } else {
+      res.status(400).json({ message: "Only admin can access posts" });
+    }
+  } catch (err) {
+    res.status(500).json(err);
+  }
+};
+
+module.exports = { postSection, post };
