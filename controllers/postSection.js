@@ -8,10 +8,19 @@ const postSection = async (req, res) => {
     const pId = req.query.pId;
     const isAdmin = req.user.isAdmin;
     if (isAdmin) {
+      const post = await Post.findOne({ where: { id: pId } });
       const replies = await Reply.findAll({ where: { postId: pId } });
       const userIds = replies.map((uId) => uId.userId);
       const users = await User.findAll({ where: { id: { [Op.or]: userIds } } });
-      res.status(200).json({ users, replies });
+
+      const arr = replies.map((r) => {
+        const u = users.filter((u) => {
+          return u.id == r.userId;
+        });
+        return { user: u[0].firstName, reply: r.reply };
+      });
+
+      res.status(200).json({ arr, post });
     } else {
       res.status(400).json({ message: "Only admin can view postSeciton!" });
     }
@@ -22,13 +31,8 @@ const postSection = async (req, res) => {
 
 const post = async (req, res) => {
   try {
-    const isAdmin = req.user.isAdmin;
-    if (isAdmin) {
-      const posts = await Post.findAll();
-      res.status(200).json(posts);
-    } else {
-      res.status(400).json({ message: "Only admin can access posts" });
-    }
+    const posts = await Post.findAll();
+    res.status(200).json(posts);
   } catch (err) {
     res.status(500).json(err);
   }
